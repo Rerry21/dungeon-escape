@@ -1,11 +1,8 @@
-import { GAME_CONFIG } from "../utils/Constants.js";
-
 export default class DungeonGenerator {
     constructor(columns, rows) {
         this.columns = columns;
         this.rows = rows;
         this.rooms = [];
-        this.seed = Math.floor(Math.random() * 999999);
     }
 
     generate() {
@@ -18,51 +15,45 @@ export default class DungeonGenerator {
 
         const roomCount = 12;
         const minRoomWidth = 6;
-        const maxRoomWidth = 12;
+        const maxRoomWidth = 11;
         const minRoomHeight = 5;
-        const maxRoomHeight = 9;
+        const maxRoomHeight = 8;
 
         let attempts = 0;
 
         while (
             this.rooms.length < roomCount &&
-            attempts < 200
+            attempts < 300
         ) {
             attempts++;
 
-            const width =
-                this.randomInt(
-                    minRoomWidth,
-                    maxRoomWidth
-                );
+            const width = this.randomInt(
+                minRoomWidth,
+                maxRoomWidth
+            );
 
-            const height =
-                this.randomInt(
-                    minRoomHeight,
-                    maxRoomHeight
-                );
+            const height = this.randomInt(
+                minRoomHeight,
+                maxRoomHeight
+            );
 
-            const x =
-                this.randomInt(
-                    1,
-                    this.columns - width - 1
-                );
+            const x = this.randomInt(
+                2,
+                this.columns - width - 2
+            );
 
-            const y =
-                this.randomInt(
-                    1,
-                    this.rows - height - 1
-                );
+            const y = this.randomInt(
+                2,
+                this.rows - height - 2
+            );
 
             const room = {
                 x,
                 y,
                 width,
                 height,
-                centerX:
-                    x + Math.floor(width / 2),
-                centerY:
-                    y + Math.floor(height / 2)
+                centerX: x + Math.floor(width / 2),
+                centerY: y + Math.floor(height / 2)
             };
 
             if (this.overlapsExistingRoom(room)) {
@@ -70,16 +61,23 @@ export default class DungeonGenerator {
             }
 
             this.rooms.push(room);
-
-            this.carveRoom(
-                tiles,
-                room
-            );
+            this.carveRoom(tiles, room);
         }
 
-        this.connectRooms(
-            tiles
-        );
+        this.rooms.sort((a, b) => {
+            if (a.y === b.y) {
+                return a.x - b.x;
+            }
+
+            return a.y - b.y;
+        });
+
+        if (this.rooms.length > 0) {
+            this.rooms[0].type = "start";
+            this.rooms[this.rooms.length - 1].type = "exit";
+        }
+
+        this.connectRooms(tiles);
 
         return {
             tiles,
@@ -104,20 +102,11 @@ export default class DungeonGenerator {
     }
 
     connectRooms(tiles) {
-        for (
-            let i = 1;
-            i < this.rooms.length;
-            i++
-        ) {
-            const previous =
-                this.rooms[i - 1];
+        for (let i = 1; i < this.rooms.length; i++) {
+            const previous = this.rooms[i - 1];
+            const current = this.rooms[i];
 
-            const current =
-                this.rooms[i];
-
-            if (
-                Math.random() < 0.5
-            ) {
+            if (Math.random() < 0.5) {
                 this.carveHorizontalCorridor(
                     tiles,
                     previous.centerX,
@@ -155,24 +144,23 @@ export default class DungeonGenerator {
         endX,
         y
     ) {
-        const direction =
-            startX < endX ? 1 : -1;
+        const direction = startX < endX ? 1 : -1;
 
         for (
             let x = startX;
             x !== endX + direction;
             x += direction
         ) {
-            for (
-                let offset = -1;
-                offset <= 1;
-                offset++
-            ) {
+            for (let offset = -1; offset <= 1; offset++) {
+                const row = y + offset;
+
                 if (
-                    tiles[y + offset] &&
-                    tiles[y + offset][x] !== undefined
+                    row >= 0 &&
+                    row < this.rows &&
+                    x >= 0 &&
+                    x < this.columns
                 ) {
-                    tiles[y + offset][x] = 0;
+                    tiles[row][x] = 0;
                 }
             }
         }
@@ -184,55 +172,42 @@ export default class DungeonGenerator {
         endY,
         x
     ) {
-        const direction =
-            startY < endY ? 1 : -1;
+        const direction = startY < endY ? 1 : -1;
 
         for (
             let y = startY;
             y !== endY + direction;
             y += direction
         ) {
-            for (
-                let offset = -1;
-                offset <= 1;
-                offset++
-            ) {
+            for (let offset = -1; offset <= 1; offset++) {
+                const column = x + offset;
+
                 if (
-                    tiles[y] &&
-                    tiles[y][x + offset] !== undefined
+                    y >= 0 &&
+                    y < this.rows &&
+                    column >= 0 &&
+                    column < this.columns
                 ) {
-                    tiles[y][x + offset] = 0;
+                    tiles[y][column] = 0;
                 }
             }
         }
     }
 
     overlapsExistingRoom(room) {
-        const padding = 1;
+        const padding = 2;
 
-        return this.rooms.some(
-            (existing) =>
-                room.x - padding <
-                    existing.x +
-                    existing.width &&
-                room.x +
-                    room.width +
-                    padding >
-                    existing.x &&
-                room.y - padding <
-                    existing.y +
-                    existing.height &&
-                room.y +
-                    room.height +
-                    padding >
-                    existing.y
+        return this.rooms.some(existing =>
+            room.x - padding < existing.x + existing.width &&
+            room.x + room.width + padding > existing.x &&
+            room.y - padding < existing.y + existing.height &&
+            room.y + room.height + padding > existing.y
         );
     }
 
     randomInt(min, max) {
         return Math.floor(
-            Math.random() *
-                (max - min + 1)
+            Math.random() * (max - min + 1)
         ) + min;
     }
 }

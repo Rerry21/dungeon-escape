@@ -1,74 +1,49 @@
-import {
-    GAME_CONFIG,
-    GAME_STATES,
-    COLORS
-} from "../utils/Constants.js";
-
 import StateManager from "./StateManager.js";
 import Input from "./Input.js";
 import GameLoop from "./GameLoop.js";
 import Camera from "./Camera.js";
-import Player from "../entities/Player.js";
 import Renderer from "../rendering/Renderer.js";
+import Player from "../entities/Player.js";
 import TileMap from "../world/TileMap.js";
+import { GAME_CONFIG, GAME_STATES } from "../utils/Constants.js";
 
 export default class Game {
     constructor(canvas) {
         this.canvas = canvas;
         this.ctx = canvas.getContext("2d");
 
-        this.canvas.width =
-            GAME_CONFIG.WIDTH;
+        this.canvas.width = GAME_CONFIG.WIDTH;
+        this.canvas.height = GAME_CONFIG.HEIGHT;
 
-        this.canvas.height =
-            GAME_CONFIG.HEIGHT;
+        this.stateManager = new StateManager();
+        this.input = new Input();
+        this.renderer = new Renderer(this.ctx);
 
-        this.ctx.imageSmoothingEnabled =
-            false;
+        this.tileMap = new TileMap(
+            GAME_CONFIG.WORLD_WIDTH,
+            GAME_CONFIG.WORLD_HEIGHT
+        );
 
-        this.stateManager =
-            new StateManager(
-                GAME_STATES.MENU
-            );
+        const spawn = this.tileMap.getSpawnPoint();
 
-        this.input =
-            new Input();
+        this.player = new Player(
+            spawn.x,
+            spawn.y
+        );
 
-        this.camera =
-            new Camera(
-                GAME_CONFIG.WORLD_WIDTH,
-                GAME_CONFIG.WORLD_HEIGHT
-            );
+        this.camera = new Camera(
+            GAME_CONFIG.WIDTH,
+            GAME_CONFIG.HEIGHT,
+            GAME_CONFIG.WORLD_WIDTH,
+            GAME_CONFIG.WORLD_HEIGHT
+        );
 
-        this.tileMap =
-            new TileMap(
-                GAME_CONFIG.WORLD_WIDTH,
-                GAME_CONFIG.WORLD_HEIGHT
-            );
+        this.camera.snapTo(this.player);
 
-        const spawn =
-            this.tileMap.getSpawnPoint();
-
-        this.player =
-            new Player(
-                spawn.x,
-                spawn.y
-            );
-
-        this.renderer =
-            new Renderer(
-                this.ctx
-            );
-
-        this.loop =
-            new GameLoop(
-                (deltaTime) =>
-                    this.update(
-                        deltaTime
-                    ),
-                () =>
-                    this.render()
-            );
+        this.loop = new GameLoop(
+            deltaTime => this.update(deltaTime),
+            () => this.draw()
+        );
     }
 
     start() {
@@ -90,182 +65,124 @@ export default class Game {
             this.player
         );
 
-        this.stateManager.changeState(
+        this.stateManager.setState(
             GAME_STATES.PLAYING
         );
     }
 
     update(deltaTime) {
         const state =
-            this.stateManager
-                .getState();
+            this.stateManager.getState();
 
         if (
-            this.input.isPressed(
-                "Escape"
-            )
+            state === GAME_STATES.MENU
         ) {
-            if (
-                state ===
-                GAME_STATES.PLAYING
-            ) {
-                this.stateManager
-                    .changeState(
-                        GAME_STATES.PAUSED
-                    );
-            } else if (
-                state ===
-                GAME_STATES.PAUSED
-            ) {
-                this.stateManager
-                    .changeState(
-                        GAME_STATES.PLAYING
-                    );
-            }
-        }
-
-        if (
-            this.input.isPressed(
-                "Enter"
-            )
-        ) {
-            if (
-                state ===
-                GAME_STATES.MENU
-            ) {
+            if (this.input.isKeyPressed("Enter")) {
                 this.startGame();
-            } else if (
-                state ===
-                GAME_STATES.PAUSED
-            ) {
-                this.stateManager
-                    .changeState(
-                        GAME_STATES.MENU
-                    );
             }
+
+            return;
         }
 
         if (
-            state ===
-            GAME_STATES.PLAYING
+            state === GAME_STATES.PLAYING
         ) {
-            this.updateGame(
+            this.player.update(
+                deltaTime,
+                this.input,
+                this.tileMap
+            );
+
+            this.camera.follow(
+                this.player,
                 deltaTime
             );
+
+            if (
+                this.tileMap.isPlayerAtExit(
+                    this.player
+                )
+            ) {
+                this.stateManager.setState(
+                    GAME_STATES.VICTORY
+                );
+            }
+
+            return;
         }
 
-        this.input.endFrame();
+        if (
+            state === GAME_STATES.VICTORY
+        ) {
+            if (this.input.isKeyPressed("Enter")) {
+                this.startGame();
+            }
+
+            return;
+        }
+
+        if (
+            state === GAME_STATES.PAUSED
+        ) {
+            if (this.input.isKeyPressed("Escape")) {
+                this.stateManager.setState(
+                    GAME_STATES.PLAYING
+                );
+            }
+
+            return;
+        }
+
+        if (
+            state === GAME_STATES.GAME_OVER
+        ) {
+            if (this.input.isKeyPressed("Enter")) {
+                this.startGame();
+            }
+        }
     }
 
-    updateGame(deltaTime) {
-        this.player.update(
-            deltaTime,
-            this.input,
-            this.tileMap
-        );
-
-        this.camera.follow(
-            this.player,
-            deltaTime
-        );
-    }
-
-    render() {
+    draw() {
         this.renderer.clear();
 
         const state =
-            this.stateManager
-                .getState();
+            this.stateManager.getState();
 
         if (
-            state ===
-            GAME_STATES.MENU
+            state === GAME_STATES.MENU
         ) {
-            this.drawMenu();
-        } else if (
-            state ===
-            GAME_STATES.PLAYING
-        ) {
-            this.drawPlaying();
-        } else if (
-            state ===
-            GAME_STATES.PAUSED
-        ) {
-            this.drawPlaying();
-            this.drawPauseMenu();
+            this.renderer.drawMenu();
+            return;
         }
-    }
 
-    drawMenu() {
-        const ctx =
-            this.ctx;
+        if (
+            state === GAME_STATES.PLAYING
+        ) {
+            this.drawPlaying();
+            return;
+        }
 
-        ctx.fillStyle =
-            "#141419";
+        if (
+            state === GAME_STATES.VICTORY
+        ) {
+            this.drawPlaying();
+            this.renderer.drawVictory();
+            return;
+        }
 
-        ctx.fillRect(
-            0,
-            0,
-            GAME_CONFIG.WIDTH,
-            GAME_CONFIG.HEIGHT
-        );
+        if (
+            state === GAME_STATES.PAUSED
+        ) {
+            this.drawPlaying();
+            this.renderer.drawPause();
+            return;
+        }
 
-        ctx.textAlign =
-            "center";
-
-        ctx.fillStyle =
-            COLORS.PRIMARY;
-
-        ctx.font =
-            "bold 54px Georgia";
-
-        ctx.fillText(
-            "DUNGEON ESCAPE",
-            480,
-            210
-        );
-
-        ctx.fillStyle =
-            COLORS.TEXT;
-
-        ctx.font =
-            "20px Arial";
-
-        ctx.fillText(
-            "A journey into the unknown",
-            480,
-            255
-        );
-
-        ctx.fillStyle =
-            COLORS.PRIMARY;
-
-        ctx.font =
-            "bold 22px Arial";
-
-        ctx.fillText(
-            "PRESS ENTER TO START",
-            480,
-            355
-        );
-
-        ctx.fillStyle =
-            COLORS.SECONDARY;
-
-        ctx.font =
-            "15px Arial";
-
-        ctx.fillText(
-            "WASD / ARROW KEYS TO MOVE",
-            480,
-            420
-        );
-
-        ctx.fillText(
-            "ESC TO PAUSE",
-            480,
-            445
-        );
+        if (
+            state === GAME_STATES.GAME_OVER
+        ) {
+            this.renderer.drawGameOver();
+        }
     }
 
     drawPlaying() {
@@ -291,54 +208,6 @@ export default class Game {
 
         this.renderer.drawHUD(
             this.player
-        );
-    }
-
-    drawPauseMenu() {
-        const ctx =
-            this.ctx;
-
-        ctx.fillStyle =
-            "rgba(0, 0, 0, 0.78)";
-
-        ctx.fillRect(
-            0,
-            0,
-            GAME_CONFIG.WIDTH,
-            GAME_CONFIG.HEIGHT
-        );
-
-        ctx.textAlign =
-            "center";
-
-        ctx.fillStyle =
-            COLORS.PRIMARY;
-
-        ctx.font =
-            "bold 48px Georgia";
-
-        ctx.fillText(
-            "PAUSED",
-            480,
-            245
-        );
-
-        ctx.fillStyle =
-            COLORS.TEXT;
-
-        ctx.font =
-            "18px Arial";
-
-        ctx.fillText(
-            "ESC - Resume",
-            480,
-            310
-        );
-
-        ctx.fillText(
-            "ENTER - Main Menu",
-            480,
-            345
         );
     }
 }
