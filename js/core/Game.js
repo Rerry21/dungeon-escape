@@ -1,3 +1,4 @@
+
 import StateManager from "./StateManager.js";
 import Input from "./Input.js";
 import GameLoop from "./GameLoop.js";
@@ -41,7 +42,10 @@ export default class Game {
         this.camera.snapTo(this.player);
 
         this.loop = new GameLoop(
-            deltaTime => this.update(deltaTime),
+            deltaTime => {
+                this.update(deltaTime);
+                this.input.endFrame();
+            },
             () => this.draw()
         );
     }
@@ -53,17 +57,14 @@ export default class Game {
     startGame() {
         this.tileMap.generate();
 
-        const spawn =
-            this.tileMap.getSpawnPoint();
+        const spawn = this.tileMap.getSpawnPoint();
 
         this.player.reset(
             spawn.x,
             spawn.y
         );
 
-        this.camera.snapTo(
-            this.player
-        );
+        this.camera.snapTo(this.player);
 
         this.stateManager.setState(
             GAME_STATES.PLAYING
@@ -71,22 +72,17 @@ export default class Game {
     }
 
     update(deltaTime) {
-        const state =
-            this.stateManager.getState();
+        const state = this.stateManager.getState();
 
-        if (
-            state === GAME_STATES.MENU
-        ) {
-            if (this.input.isKeyPressed("Enter")) {
+        if (state === GAME_STATES.MENU) {
+            if (this.input.isPressed("Enter")) {
                 this.startGame();
             }
 
             return;
         }
 
-        if (
-            state === GAME_STATES.PLAYING
-        ) {
+        if (state === GAME_STATES.PLAYING) {
             this.player.update(
                 deltaTime,
                 this.input,
@@ -98,11 +94,7 @@ export default class Game {
                 deltaTime
             );
 
-            if (
-                this.tileMap.isPlayerAtExit(
-                    this.player
-                )
-            ) {
+            if (this.tileMap.isPlayerAtExit(this.player)) {
                 this.stateManager.setState(
                     GAME_STATES.VICTORY
                 );
@@ -111,20 +103,16 @@ export default class Game {
             return;
         }
 
-        if (
-            state === GAME_STATES.VICTORY
-        ) {
-            if (this.input.isKeyPressed("Enter")) {
+        if (state === GAME_STATES.VICTORY) {
+            if (this.input.isPressed("Enter")) {
                 this.startGame();
             }
 
             return;
         }
 
-        if (
-            state === GAME_STATES.PAUSED
-        ) {
-            if (this.input.isKeyPressed("Escape")) {
+        if (state === GAME_STATES.PAUSED) {
+            if (this.input.isPressed("Escape")) {
                 this.stateManager.setState(
                     GAME_STATES.PLAYING
                 );
@@ -133,10 +121,8 @@ export default class Game {
             return;
         }
 
-        if (
-            state === GAME_STATES.GAME_OVER
-        ) {
-            if (this.input.isKeyPressed("Enter")) {
+        if (state === GAME_STATES.GAME_OVER) {
+            if (this.input.isPressed("Enter")) {
                 this.startGame();
             }
         }
@@ -145,69 +131,46 @@ export default class Game {
     draw() {
         this.renderer.clear();
 
-        const state =
-            this.stateManager.getState();
+        const state = this.stateManager.getState();
 
-        if (
-            state === GAME_STATES.MENU
-        ) {
+        if (state === GAME_STATES.MENU) {
             this.renderer.drawMenu();
             return;
         }
 
-        if (
-            state === GAME_STATES.PLAYING
-        ) {
+        if (state === GAME_STATES.PLAYING) {
             this.drawPlaying();
             return;
         }
 
-        if (
-            state === GAME_STATES.VICTORY
-        ) {
+        if (state === GAME_STATES.VICTORY) {
             this.drawPlaying();
             this.renderer.drawVictory();
             return;
         }
 
-        if (
-            state === GAME_STATES.PAUSED
-        ) {
+        if (state === GAME_STATES.PAUSED) {
             this.drawPlaying();
             this.renderer.drawPause();
             return;
         }
 
-        if (
-            state === GAME_STATES.GAME_OVER
-        ) {
+        if (state === GAME_STATES.GAME_OVER) {
             this.renderer.drawGameOver();
         }
     }
 
     drawPlaying() {
-        this.camera.apply(
-            this.ctx
-        );
+        this.camera.apply(this.ctx);
 
-        this.tileMap.draw(
-            this.ctx
-        );
+        this.tileMap.draw(this.ctx);
 
-        this.renderer.drawPlayer(
-            this.player
-        );
+        this.renderer.drawPlayer(this.player);
 
-        this.renderer.drawLighting(
-            this.player
-        );
+        this.renderer.drawLighting(this.player);
 
-        this.camera.reset(
-            this.ctx
-        );
+        this.camera.reset(this.ctx);
 
-        this.renderer.drawHUD(
-            this.player
-        );
+        this.renderer.drawHUD(this.player);
     }
 }

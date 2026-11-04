@@ -1,3 +1,4 @@
+
 export default class Input {
     constructor() {
         this.keys = new Set();
@@ -42,7 +43,7 @@ export default class Input {
     }
 
     isAnyDown(keys) {
-        return keys.some((key) => this.isDown(key));
+        return keys.some(key => this.isDown(key));
     }
 
     endFrame() {
