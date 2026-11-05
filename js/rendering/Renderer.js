@@ -62,6 +62,65 @@ export default class Renderer {
             player.width - 14,
             3
         );
+
+        if (player.isAttacking()) {
+            this.drawAttack(player);
+        }
+    }
+
+    drawAttack(player) {
+        const ctx = this.ctx;
+        const hitbox = player.getAttackHitbox();
+
+        ctx.fillStyle = "#f1eee6";
+
+        if (
+            player.direction === "left" ||
+            player.direction === "right"
+        ) {
+            ctx.fillRect(
+                hitbox.x,
+                hitbox.y,
+                hitbox.width,
+                5
+            );
+
+            ctx.fillStyle = "#d6a84f";
+
+            ctx.fillRect(
+                hitbox.x,
+                hitbox.y + 5,
+                hitbox.width,
+                4
+            );
+
+            return;
+        }
+
+        ctx.fillRect(
+            hitbox.x,
+            hitbox.y,
+            hitbox.width,
+            hitbox.height
+        );
+
+        ctx.fillStyle = "#d6a84f";
+
+        if (player.direction === "up") {
+            ctx.fillRect(
+                hitbox.x + 4,
+                hitbox.y + 5,
+                hitbox.width - 8,
+                hitbox.height
+            );
+        } else {
+            ctx.fillRect(
+                hitbox.x + 4,
+                hitbox.y,
+                hitbox.width - 8,
+                hitbox.height - 5
+            );
+        }
     }
 
     drawLighting(player, radius = 190) {

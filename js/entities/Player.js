@@ -8,9 +8,18 @@ export default class Player extends Entity {
         this.speed = 180;
         this.color = "#d6a84f";
         this.direction = "down";
+
+        this.attackDuration = 0.12;
+        this.attackCooldown = 0.25;
+        this.attackTimer = 0;
+        this.cooldownTimer = 0;
+        this.attackRange = 18;
+        this.attackWidth = 18;
     }
 
     update(deltaTime, input, tileMap) {
+        this.updateAttackTimers(deltaTime);
+
         let horizontal = 0;
         let vertical = 0;
 
@@ -34,6 +43,13 @@ export default class Player extends Entity {
             this.direction = "down";
         }
 
+        if (
+            input.isPressed("Space") &&
+            this.cooldownTimer <= 0
+        ) {
+            this.attack();
+        }
+
         if (horizontal !== 0 && vertical !== 0) {
             const length = Math.sqrt(
                 horizontal * horizontal +
@@ -51,13 +67,79 @@ export default class Player extends Entity {
         this.moveVertical(deltaTime, tileMap);
     }
 
+    updateAttackTimers(deltaTime) {
+        if (this.attackTimer > 0) {
+            this.attackTimer -= deltaTime;
+        }
+
+        if (this.cooldownTimer > 0) {
+            this.cooldownTimer -= deltaTime;
+        }
+    }
+
+    attack() {
+        this.attackTimer = this.attackDuration;
+        this.cooldownTimer =
+            this.attackDuration +
+            this.attackCooldown;
+    }
+
+    isAttacking() {
+        return this.attackTimer > 0;
+    }
+
+    getAttackHitbox() {
+        const centerX =
+            this.x +
+            this.width / 2;
+
+        const centerY =
+            this.y +
+            this.height / 2;
+
+        if (this.direction === "up") {
+            return {
+                x: centerX - this.attackWidth / 2,
+                y: this.y - this.attackRange,
+                width: this.attackWidth,
+                height: this.attackRange
+            };
+        }
+
+        if (this.direction === "down") {
+            return {
+                x: centerX - this.attackWidth / 2,
+                y: this.y + this.height,
+                width: this.attackWidth,
+                height: this.attackRange
+            };
+        }
+
+        if (this.direction === "left") {
+            return {
+                x: this.x - this.attackRange,
+                y: centerY - this.attackWidth / 2,
+                width: this.attackRange,
+                height: this.attackWidth
+            };
+        }
+
+        return {
+            x: this.x + this.width,
+            y: centerY - this.attackWidth / 2,
+            width: this.attackRange,
+            height: this.attackWidth
+        };
+    }
+
     moveHorizontal(deltaTime, tileMap) {
         this.x += this.velocityX * deltaTime;
 
         if (tileMap.collides(this)) {
             if (this.velocityX > 0) {
                 const column = Math.floor(
-                    (this.x + this.width) / GAME_CONFIG.TILE_SIZE
+                    (this.x + this.width) /
+                    GAME_CONFIG.TILE_SIZE
                 );
 
                 this.x =
@@ -65,11 +147,13 @@ export default class Player extends Entity {
                     this.width;
             } else if (this.velocityX < 0) {
                 const column = Math.floor(
-                    this.x / GAME_CONFIG.TILE_SIZE
+                    this.x /
+                    GAME_CONFIG.TILE_SIZE
                 );
 
                 this.x =
-                    (column + 1) * GAME_CONFIG.TILE_SIZE;
+                    (column + 1) *
+                    GAME_CONFIG.TILE_SIZE;
             }
         }
 
@@ -77,7 +161,8 @@ export default class Player extends Entity {
             0,
             Math.min(
                 this.x,
-                GAME_CONFIG.WORLD_WIDTH - this.width
+                GAME_CONFIG.WORLD_WIDTH -
+                this.width
             )
         );
     }
@@ -88,7 +173,8 @@ export default class Player extends Entity {
         if (tileMap.collides(this)) {
             if (this.velocityY > 0) {
                 const row = Math.floor(
-                    (this.y + this.height) / GAME_CONFIG.TILE_SIZE
+                    (this.y + this.height) /
+                    GAME_CONFIG.TILE_SIZE
                 );
 
                 this.y =
@@ -96,11 +182,13 @@ export default class Player extends Entity {
                     this.height;
             } else if (this.velocityY < 0) {
                 const row = Math.floor(
-                    this.y / GAME_CONFIG.TILE_SIZE
+                    this.y /
+                    GAME_CONFIG.TILE_SIZE
                 );
 
                 this.y =
-                    (row + 1) * GAME_CONFIG.TILE_SIZE;
+                    (row + 1) *
+                    GAME_CONFIG.TILE_SIZE;
             }
         }
 
@@ -108,7 +196,8 @@ export default class Player extends Entity {
             0,
             Math.min(
                 this.y,
-                GAME_CONFIG.WORLD_HEIGHT - this.height
+                GAME_CONFIG.WORLD_HEIGHT -
+                this.height
             )
         );
     }
@@ -119,5 +208,7 @@ export default class Player extends Entity {
         this.velocityX = 0;
         this.velocityY = 0;
         this.direction = "down";
+        this.attackTimer = 0;
+        this.cooldownTimer = 0;
     }
 }
