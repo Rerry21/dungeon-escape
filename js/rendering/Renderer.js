@@ -136,51 +136,92 @@ export default class Renderer {
     }
 
     drawEnemy(enemy) {
-        const ctx = this.ctx;
+    const ctx = this.ctx;
 
-        const x = Math.floor(enemy.x);
-        const y = Math.floor(enemy.y);
+    const x = Math.floor(enemy.x);
+    const y = Math.floor(enemy.y);
 
-        ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
+    if (enemy.isDying()) {
+        const progress =
+            enemy.getDeathProgress();
 
-        ctx.fillRect(
-            x + 2,
-            y + enemy.height - 1,
-            enemy.width - 4,
-            4
-        );
+        ctx.globalAlpha =
+            progress;
 
-        if(enemy.isHitFlashing()){
-            ctx.fillStyle = "#f1eee6";
-        } else {
-            ctx.fillStyle = "8f3f48";
-        }
+        const scale =
+            0.5 +
+            progress * 0.5;
 
-        ctx.fillRect(
-            x + 3,
-            y + 3,
-            enemy.width - 6,
-            enemy.height - 6
-        );
+        const width =
+            enemy.width * scale;
 
-        ctx.fillStyle = "#c96a6a";
+        const height =
+            enemy.height * scale;
 
-        ctx.fillRect(
-            x + 6,
-            y + 6,
-            4,
-            4
-        );
+        const offsetX =
+            (enemy.width - width) / 2;
+
+        const offsetY =
+            (enemy.height - height) / 2;
+
+        ctx.fillStyle = "#8f3f48";
 
         ctx.fillRect(
-            x + enemy.width - 10,
-            y + 6,
-            4,
-            4
+            x + offsetX,
+            y + offsetY,
+            width,
+            height
         );
 
-        this.drawEnemyHealth(enemy);
+        ctx.globalAlpha = 1;
+
+        return;
     }
+
+    ctx.fillStyle =
+        "rgba(0, 0, 0, 0.35)";
+
+    ctx.fillRect(
+        x + 2,
+        y + enemy.height - 1,
+        enemy.width - 4,
+        4
+    );
+
+    if (enemy.isHitFlashing()) {
+        ctx.fillStyle =
+            "#f1eee6";
+    } else {
+        ctx.fillStyle =
+            "#8f3f48";
+    }
+
+    ctx.fillRect(
+        x + 3,
+        y + 3,
+        enemy.width - 6,
+        enemy.height - 6
+    );
+
+    ctx.fillStyle =
+        "#c96a6a";
+
+    ctx.fillRect(
+        x + 6,
+        y + 6,
+        4,
+        4
+    );
+
+    ctx.fillRect(
+        x + enemy.width - 10,
+        y + 6,
+        4,
+        4
+    );
+
+    this.drawEnemyHealth(enemy);
+}
 
     drawEnemyHealth(enemy) {
         const ctx = this.ctx;
@@ -273,66 +314,90 @@ export default class Renderer {
         );
     }
 
-    drawHUD(player) {
-        const ctx = this.ctx;
+    drawHUD(
+    player,
+    enemiesRemaining = 0,
+    exitUnlocked = false
+) {
+    const ctx = this.ctx;
 
-        ctx.fillStyle =
-            "rgba(16, 16, 20, 0.9)";
+    ctx.fillStyle =
+        "rgba(16, 16, 20, 0.9)";
 
-        ctx.fillRect(
-            20,
-            20,
-            220,
-            78
-        );
+    ctx.fillRect(
+        20,
+        20,
+        260,
+        100
+    );
 
-        ctx.fillStyle = "#d6a84f";
+    ctx.fillStyle =
+        "#d6a84f";
 
-        ctx.font =
-            "bold 18px monospace";
+    ctx.font =
+        "bold 18px monospace";
 
-        ctx.fillText(
-            "DUNGEON ESCAPE",
-            32,
-            45
-        );
+    ctx.fillText(
+        "DUNGEON ESCAPE",
+        32,
+        45
+    );
 
-        ctx.fillStyle = "#f1eee6";
+    ctx.fillStyle =
+        "#f1eee6";
 
-        ctx.font =
-            "14px monospace";
+    ctx.font =
+        "14px monospace";
 
-        ctx.fillText(
-            "FLOOR 01",
-            32,
-            66
-        );
+    ctx.fillText(
+        "FLOOR 01",
+        32,
+        66
+    );
 
-        const barX = 32;
-        const barY = 77;
-        const barWidth = 180;
-        const barHeight = 8;
+    const barX = 32;
+    const barY = 77;
+    const barWidth = 180;
+    const barHeight = 8;
 
-        ctx.fillStyle = "#111116";
+    ctx.fillStyle =
+        "#111116";
 
-        ctx.fillRect(
-            barX,
-            barY,
-            barWidth,
-            barHeight
-        );
+    ctx.fillRect(
+        barX,
+        barY,
+        barWidth,
+        barHeight
+    );
 
-        ctx.fillStyle = "#d65a5a";
+    ctx.fillStyle =
+        "#d65a5a";
 
-        ctx.fillRect(
-            barX,
-            barY,
-            barWidth *
-            (player.health /
-            player.maxHealth),
-            barHeight
-        );
-    }
+    ctx.fillRect(
+        barX,
+        barY,
+        barWidth *
+        (player.health /
+        player.maxHealth),
+        barHeight
+    );
+
+    ctx.fillStyle =
+        exitUnlocked
+            ? "#4caf50"
+            : "#f1eee6";
+
+    ctx.font =
+        "12px monospace";
+
+    ctx.fillText(
+        exitUnlocked
+            ? "EXIT UNLOCKED"
+            : `ENEMIES: ${enemiesRemaining}`,
+        32,
+        105
+    );
+}
 
     drawMenu() {
         const ctx = this.ctx;

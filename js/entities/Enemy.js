@@ -12,12 +12,22 @@ export default class Enemy extends Entity {
 
         this.hitCooldown = 0;
         this.hitFlashTimer = 0;
+
         this.knockbackTimer = 0;
         this.knockbackX = 0;
         this.knockbackY = 0;
+
+        this.deathTimer = 0;
+        this.deathDuration = 0.25;
+        this.dead = false;
     }
 
     update(deltaTime, player, tileMap) {
+        if (this.dead) {
+            this.deathTimer -= deltaTime;
+            return;
+        }
+
         if (this.hitCooldown > 0) {
             this.hitCooldown -= deltaTime;
         }
@@ -205,11 +215,15 @@ export default class Enemy extends Entity {
     }
 
     takeDamage(amount, attacker = null) {
-        if (this.hitCooldown > 0) {
+        if (
+            this.hitCooldown > 0 ||
+            this.dead
+        ) {
             return;
         }
 
         this.health -= amount;
+
         this.health = Math.max(
             0,
             this.health
@@ -221,6 +235,16 @@ export default class Enemy extends Entity {
         if (attacker) {
             this.applyKnockback(attacker);
         }
+
+        if (this.health <= 0) {
+            this.startDeath();
+        }
+    }
+
+    startDeath() {
+        this.dead = true;
+        this.deathTimer = this.deathDuration;
+        this.knockbackTimer = 0;
     }
 
     applyKnockback(attacker) {
@@ -276,6 +300,23 @@ export default class Enemy extends Entity {
     }
 
     isDead() {
-        return this.health <= 0;
+        return this.dead &&
+            this.deathTimer <= 0;
+    }
+
+    isDying() {
+        return this.dead;
+    }
+
+    getDeathProgress() {
+        if (!this.dead) {
+            return 0;
+        }
+
+        return Math.max(
+            0,
+            this.deathTimer /
+            this.deathDuration
+        );
     }
 }

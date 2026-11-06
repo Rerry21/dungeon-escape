@@ -19,8 +19,6 @@ export default class TileMap {
         this.rooms = [];
         this.startRoom = null;
         this.exitRoom = null;
-
-        this.generate();
     }
 
     generate() {
@@ -29,7 +27,8 @@ export default class TileMap {
             this.rows
         );
 
-        const dungeon = generator.generate();
+        const dungeon =
+            generator.generate();
 
         this.tiles = dungeon.tiles;
         this.rooms = dungeon.rooms;
@@ -168,19 +167,24 @@ export default class TileMap {
     }
 
     isPlayerAtExit(player) {
-        const exit = this.getExitPoint();
+        const exit =
+            this.getExitPoint();
 
         const playerCenterX =
-            player.x + player.width / 2;
+            player.x +
+            player.width / 2;
 
         const playerCenterY =
-            player.y + player.height / 2;
+            player.y +
+            player.height / 2;
 
         const distanceX =
-            playerCenterX - exit.x;
+            playerCenterX -
+            exit.x;
 
         const distanceY =
-            playerCenterY - exit.y;
+            playerCenterY -
+            exit.y;
 
         const distance =
             Math.sqrt(
@@ -188,10 +192,11 @@ export default class TileMap {
                 distanceY * distanceY
             );
 
-        return distance < this.tileSize * 0.8;
+        return distance <
+            this.tileSize * 0.8;
     }
 
-    draw(ctx) {
+    draw(ctx, exitUnlocked = false) {
         for (
             let row = 0;
             row < this.rows;
@@ -228,20 +233,29 @@ export default class TileMap {
             }
         }
 
-        this.drawExit(ctx);
+        this.drawExit(
+            ctx,
+            exitUnlocked
+        );
     }
 
-    drawExit(ctx) {
-        const exit = this.getExitPoint();
-        const size = this.tileSize;
+    drawExit(ctx, unlocked) {
+        const exit =
+            this.getExitPoint();
+
+        const size =
+            this.tileSize;
 
         const x =
-            exit.x - size / 2;
+            exit.x -
+            size / 2;
 
         const y =
-            exit.y - size / 2;
+            exit.y -
+            size / 2;
 
-        ctx.fillStyle = "#181824";
+        ctx.fillStyle =
+            "#181824";
 
         ctx.fillRect(
             x + 4,
@@ -250,7 +264,10 @@ export default class TileMap {
             size - 8
         );
 
-        ctx.fillStyle = "#7c4dff";
+        ctx.fillStyle =
+            unlocked
+                ? "#4caf50"
+                : "#7c4dff";
 
         ctx.fillRect(
             x + 8,
@@ -259,7 +276,10 @@ export default class TileMap {
             size - 10
         );
 
-        ctx.fillStyle = "#b99aff";
+        ctx.fillStyle =
+            unlocked
+                ? "#b7ffbd"
+                : "#b99aff";
 
         ctx.fillRect(
             x + 11,
@@ -268,7 +288,8 @@ export default class TileMap {
             size - 16
         );
 
-        ctx.fillStyle = "#ffffff";
+        ctx.fillStyle =
+            "#ffffff";
 
         ctx.fillRect(
             x + 14,
@@ -279,9 +300,11 @@ export default class TileMap {
     }
 
     drawFloor(ctx, x, y) {
-        const size = this.tileSize;
+        const size =
+            this.tileSize;
 
-        ctx.fillStyle = "#24242b";
+        ctx.fillStyle =
+            "#24242b";
 
         ctx.fillRect(
             x,
@@ -290,7 +313,8 @@ export default class TileMap {
             size
         );
 
-        ctx.fillStyle = "#292930";
+        ctx.fillStyle =
+            "#292930";
 
         ctx.fillRect(
             x + 1,
@@ -299,7 +323,8 @@ export default class TileMap {
             2
         );
 
-        ctx.fillStyle = "#1e1e24";
+        ctx.fillStyle =
+            "#1e1e24";
 
         ctx.fillRect(
             x + 1,
@@ -310,9 +335,11 @@ export default class TileMap {
     }
 
     drawWall(ctx, x, y) {
-        const size = this.tileSize;
+        const size =
+            this.tileSize;
 
-        ctx.fillStyle = "#111116";
+        ctx.fillStyle =
+            "#111116";
 
         ctx.fillRect(
             x,
@@ -321,7 +348,8 @@ export default class TileMap {
             size
         );
 
-        ctx.fillStyle = "#3b3b44";
+        ctx.fillStyle =
+            "#3b3b44";
 
         ctx.fillRect(
             x + 1,
@@ -330,7 +358,8 @@ export default class TileMap {
             5
         );
 
-        ctx.fillStyle = "#292930";
+        ctx.fillStyle =
+            "#292930";
 
         ctx.fillRect(
             x + 2,
@@ -339,7 +368,8 @@ export default class TileMap {
             size - 9
         );
 
-        ctx.fillStyle = "#17171c";
+        ctx.fillStyle =
+            "#17171c";
 
         ctx.fillRect(
             x + 2,

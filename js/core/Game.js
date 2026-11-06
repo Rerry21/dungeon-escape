@@ -33,6 +33,7 @@ export default class Game {
         );
 
         this.enemies = [];
+        this.exitUnlocked = false;
 
         this.camera = new Camera(
             GAME_CONFIG.WIDTH,
@@ -68,6 +69,8 @@ export default class Game {
         );
 
         this.spawnEnemies();
+
+        this.exitUnlocked = false;
 
         this.camera.snapTo(
             this.player
@@ -149,6 +152,12 @@ export default class Game {
                     enemy => !enemy.isDead()
                 );
 
+            if (
+                this.enemies.length === 0
+            ) {
+                this.exitUnlocked = true;
+            }
+
             this.camera.follow(
                 this.player,
                 deltaTime
@@ -163,6 +172,7 @@ export default class Game {
             }
 
             if (
+                this.exitUnlocked &&
                 this.tileMap.isPlayerAtExit(
                     this.player
                 )
@@ -236,6 +246,12 @@ export default class Game {
 
         for (const enemy of this.enemies) {
             if (
+                enemy.isDying()
+            ) {
+                continue;
+            }
+
+            if (
                 this.intersects(
                     this.player,
                     enemy
@@ -296,10 +312,15 @@ export default class Game {
     drawPlaying() {
         this.camera.apply(this.ctx);
 
-        this.tileMap.draw(this.ctx);
+        this.tileMap.draw(
+            this.ctx,
+            this.exitUnlocked
+        );
 
         for (const enemy of this.enemies) {
-            this.renderer.drawEnemy(enemy);
+            this.renderer.drawEnemy(
+                enemy
+            );
         }
 
         this.renderer.drawPlayer(
@@ -310,10 +331,14 @@ export default class Game {
             this.player
         );
 
-        this.camera.reset(this.ctx);
+        this.camera.reset(
+            this.ctx
+        );
 
         this.renderer.drawHUD(
-            this.player
+            this.player,
+            this.enemies.length,
+            this.exitUnlocked
         );
     }
 }
