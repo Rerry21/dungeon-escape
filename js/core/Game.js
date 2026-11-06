@@ -25,15 +25,11 @@ export default class Game {
             GAME_CONFIG.WORLD_HEIGHT
         );
 
-        const spawn = this.tileMap.getSpawnPoint();
-
-        this.player = new Player(
-            spawn.x,
-            spawn.y
-        );
+        this.player = new Player(0, 0);
 
         this.enemies = [];
         this.exitUnlocked = false;
+        this.floor = 1;
 
         this.camera = new Camera(
             GAME_CONFIG.WIDTH,
@@ -57,7 +53,33 @@ export default class Game {
         this.loop.start();
     }
 
-    startGame() {
+    startNewRun() {
+        this.floor = 1;
+        this.startFloor();
+
+        this.stateManager.setState(
+            GAME_STATES.PLAYING
+        );
+    }
+
+    startNextFloor() {
+        this.floor += 1;
+        this.startFloor();
+
+        this.stateManager.setState(
+            GAME_STATES.PLAYING
+        );
+    }
+
+    restartFloor() {
+        this.startFloor();
+
+        this.stateManager.setState(
+            GAME_STATES.PLAYING
+        );
+    }
+
+    startFloor() {
         this.tileMap.generate();
 
         const spawn =
@@ -75,45 +97,67 @@ export default class Game {
         this.camera.snapTo(
             this.player
         );
-
-        this.stateManager.setState(
-            GAME_STATES.PLAYING
-        );
     }
 
     spawnEnemies() {
-        this.enemies = [];
+    this.enemies = [];
 
-        const rooms = this.tileMap.rooms;
+    const rooms = this.tileMap.rooms;
 
-        for (
-            let i = 1;
-            i < rooms.length - 1;
-            i++
-        ) {
-            if (this.enemies.length >= 6) {
-                break;
-            }
+    const enemyCount = Math.min(
+        4 + this.floor,
+        rooms.length - 2
+    );
 
-            const room = rooms[i];
+    for (
+        let i = 1;
+        i <= enemyCount;
+        i++
+    ) {
+        const room =
+            rooms[i];
 
-            const x =
-                room.centerX *
-                GAME_CONFIG.TILE_SIZE +
-                GAME_CONFIG.TILE_SIZE / 2 -
-                11;
-
-            const y =
-                room.centerY *
-                GAME_CONFIG.TILE_SIZE +
-                GAME_CONFIG.TILE_SIZE / 2 -
-                11;
-
-            this.enemies.push(
-                new Enemy(x, y)
-            );
+        if (!room) {
+            break;
         }
+
+        const x =
+            room.centerX *
+            GAME_CONFIG.TILE_SIZE +
+            GAME_CONFIG.TILE_SIZE / 2 -
+            11;
+
+        const y =
+            room.centerY *
+            GAME_CONFIG.TILE_SIZE +
+            GAME_CONFIG.TILE_SIZE / 2 -
+            11;
+
+        let type = "chaser";
+
+        if (
+            this.floor >= 2 &&
+            i % 3 === 0
+        ) {
+            type = "fast";
+        }
+
+        if (
+            this.floor >= 3 &&
+            i % 5 === 0
+        ) {
+            type = "tank";
+        }
+
+        this.enemies.push(
+            new Enemy(
+                x,
+                y,
+                type
+            )
+        );
     }
+}
 
     update(deltaTime) {
         const state =
@@ -123,7 +167,7 @@ export default class Game {
             if (
                 this.input.isPressed("Enter")
             ) {
-                this.startGame();
+                this.startNewRun();
             }
 
             return;
@@ -189,7 +233,7 @@ export default class Game {
             if (
                 this.input.isPressed("Enter")
             ) {
-                this.startGame();
+                this.startNextFloor();
             }
 
             return;
@@ -211,7 +255,7 @@ export default class Game {
             if (
                 this.input.isPressed("Enter")
             ) {
-                this.startGame();
+                this.restartFloor();
             }
         }
     }
@@ -293,7 +337,9 @@ export default class Game {
 
         if (state === GAME_STATES.VICTORY) {
             this.drawPlaying();
-            this.renderer.drawVictory();
+            this.renderer.drawVictory(
+                this.floor
+            );
             return;
         }
 
@@ -305,7 +351,9 @@ export default class Game {
 
         if (state === GAME_STATES.GAME_OVER) {
             this.drawPlaying();
-            this.renderer.drawGameOver();
+            this.renderer.drawGameOver(
+                this.floor
+            );
         }
     }
 
@@ -338,7 +386,8 @@ export default class Game {
         this.renderer.drawHUD(
             this.player,
             this.enemies.length,
-            this.exitUnlocked
+            this.exitUnlocked,
+            this.floor
         );
     }
 }

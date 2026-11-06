@@ -164,7 +164,12 @@ export default class Renderer {
         const offsetY =
             (enemy.height - height) / 2;
 
-        ctx.fillStyle = "#8f3f48";
+        ctx.fillStyle =
+            enemy.type === "tank"
+                ? "#9b6b32"
+                : enemy.type === "fast"
+                    ? "#3f8f63"
+                    : "#8f3f48";
 
         ctx.fillRect(
             x + offsetX,
@@ -191,6 +196,12 @@ export default class Renderer {
     if (enemy.isHitFlashing()) {
         ctx.fillStyle =
             "#f1eee6";
+    } else if (enemy.type === "tank") {
+        ctx.fillStyle =
+            "#9b6b32";
+    } else if (enemy.type === "fast") {
+        ctx.fillStyle =
+            "#3f8f63";
     } else {
         ctx.fillStyle =
             "#8f3f48";
@@ -204,7 +215,11 @@ export default class Renderer {
     );
 
     ctx.fillStyle =
-        "#c96a6a";
+        enemy.type === "tank"
+            ? "#d6a84f"
+            : enemy.type === "fast"
+                ? "#78d49a"
+                : "#c96a6a";
 
     ctx.fillRect(
         x + 6,
@@ -315,89 +330,90 @@ export default class Renderer {
     }
 
     drawHUD(
-    player,
-    enemiesRemaining = 0,
-    exitUnlocked = false
-) {
-    const ctx = this.ctx;
+        player,
+        enemiesRemaining = 0,
+        exitUnlocked = false,
+        floor = 1
+    ) {
+        const ctx = this.ctx;
 
-    ctx.fillStyle =
-        "rgba(16, 16, 20, 0.9)";
+        ctx.fillStyle =
+            "rgba(16, 16, 20, 0.9)";
 
-    ctx.fillRect(
-        20,
-        20,
-        260,
-        100
-    );
+        ctx.fillRect(
+            20,
+            20,
+            260,
+            100
+        );
 
-    ctx.fillStyle =
-        "#d6a84f";
+        ctx.fillStyle =
+            "#d6a84f";
 
-    ctx.font =
-        "bold 18px monospace";
+        ctx.font =
+            "bold 18px monospace";
 
-    ctx.fillText(
-        "DUNGEON ESCAPE",
-        32,
-        45
-    );
+        ctx.fillText(
+            "DUNGEON ESCAPE",
+            32,
+            45
+        );
 
-    ctx.fillStyle =
-        "#f1eee6";
+        ctx.fillStyle =
+            "#f1eee6";
 
-    ctx.font =
-        "14px monospace";
+        ctx.font =
+            "14px monospace";
 
-    ctx.fillText(
-        "FLOOR 01",
-        32,
-        66
-    );
+        ctx.fillText(
+            `FLOOR ${String(floor).padStart(2, "0")}`,
+            32,
+            66
+        );
 
-    const barX = 32;
-    const barY = 77;
-    const barWidth = 180;
-    const barHeight = 8;
+        const barX = 32;
+        const barY = 77;
+        const barWidth = 180;
+        const barHeight = 8;
 
-    ctx.fillStyle =
-        "#111116";
+        ctx.fillStyle =
+            "#111116";
 
-    ctx.fillRect(
-        barX,
-        barY,
-        barWidth,
-        barHeight
-    );
+        ctx.fillRect(
+            barX,
+            barY,
+            barWidth,
+            barHeight
+        );
 
-    ctx.fillStyle =
-        "#d65a5a";
+        ctx.fillStyle =
+            "#d65a5a";
 
-    ctx.fillRect(
-        barX,
-        barY,
-        barWidth *
-        (player.health /
-        player.maxHealth),
-        barHeight
-    );
+        ctx.fillRect(
+            barX,
+            barY,
+            barWidth *
+            (player.health /
+            player.maxHealth),
+            barHeight
+        );
 
-    ctx.fillStyle =
-        exitUnlocked
-            ? "#4caf50"
-            : "#f1eee6";
+        ctx.fillStyle =
+            exitUnlocked
+                ? "#4caf50"
+                : "#f1eee6";
 
-    ctx.font =
-        "12px monospace";
+        ctx.font =
+            "12px monospace";
 
-    ctx.fillText(
-        exitUnlocked
-            ? "EXIT UNLOCKED"
-            : `ENEMIES: ${enemiesRemaining}`,
-        32,
-        105
-    );
-}
+        ctx.fillText(
+            exitUnlocked
+                ? "EXIT UNLOCKED"
+                : `ENEMIES: ${enemiesRemaining}`,
+            32,
+            105
+        );
+    }
 
     drawMenu() {
         const ctx = this.ctx;
@@ -467,7 +483,7 @@ export default class Renderer {
         ctx.textAlign = "left";
     }
 
-    drawVictory() {
+    drawVictory(floor = 1) {
         const ctx = this.ctx;
 
         ctx.fillStyle =
@@ -482,24 +498,26 @@ export default class Renderer {
 
         ctx.textAlign = "center";
 
-        ctx.fillStyle = "#d6a84f";
+        ctx.fillStyle =
+            "#4caf50";
 
         ctx.font =
             "bold 40px monospace";
 
         ctx.fillText(
-            "DUNGEON CLEARED",
+            `FLOOR ${String(floor).padStart(2, "0")} CLEARED`,
             ctx.canvas.width / 2,
             230
         );
 
-        ctx.fillStyle = "#f1eee6";
+        ctx.fillStyle =
+            "#f1eee6";
 
         ctx.font =
             "18px monospace";
 
         ctx.fillText(
-            "PRESS ENTER TO PLAY AGAIN",
+            "PRESS ENTER FOR NEXT FLOOR",
             ctx.canvas.width / 2,
             280
         );
@@ -507,10 +525,11 @@ export default class Renderer {
         ctx.textAlign = "left";
     }
 
-    drawGameOver() {
+    drawGameOver(floor = 1) {
         const ctx = this.ctx;
 
-        ctx.fillStyle = "rgba(16, 16, 20, 0.85)";
+        ctx.fillStyle =
+            "rgba(16, 16, 20, 0.85)";
 
         ctx.fillRect(
             0,
@@ -521,7 +540,8 @@ export default class Renderer {
 
         ctx.textAlign = "center";
 
-        ctx.fillStyle = "#d65a5a";
+        ctx.fillStyle =
+            "#d65a5a";
 
         ctx.font =
             "bold 40px monospace";
@@ -532,15 +552,22 @@ export default class Renderer {
             230
         );
 
-        ctx.fillStyle = "#f1eee6";
+        ctx.fillStyle =
+            "#f1eee6";
 
         ctx.font =
             "18px monospace";
 
         ctx.fillText(
-            "PRESS ENTER TO TRY AGAIN",
+            `FLOOR ${String(floor).padStart(2, "0")}`,
             ctx.canvas.width / 2,
-            280
+            265
+        );
+
+        ctx.fillText(
+            "PRESS ENTER TO RETRY",
+            ctx.canvas.width / 2,
+            300
         );
 
         ctx.textAlign = "left";

@@ -2,13 +2,30 @@ import Entity from "./Entity.js";
 import { GAME_CONFIG } from "../utils/Constants.js";
 
 export default class Enemy extends Entity {
-    constructor(x, y) {
+    constructor(x, y, type = "chaser") {
         super(x, y, 22, 22);
 
+        this.type = type;
+
         this.speed = 70;
-        this.health = 3;
         this.maxHealth = 3;
         this.damage = 1;
+
+        if (type === "fast") {
+            this.speed = 110;
+            this.maxHealth = 2;
+            this.damage = 1;
+        }
+
+        if (type === "tank") {
+            this.speed = 45;
+            this.maxHealth = 6;
+            this.damage = 2;
+            this.width = 28;
+            this.height = 28;
+        }
+
+        this.health = this.maxHealth;
 
         this.hitCooldown = 0;
         this.hitFlashTimer = 0;
@@ -284,7 +301,15 @@ export default class Enemy extends Entity {
         directionX /= distance;
         directionY /= distance;
 
-        const force = 180;
+        let force = 180;
+
+        if (this.type === "tank") {
+            force = 120;
+        }
+
+        if (this.type === "fast") {
+            force = 210;
+        }
 
         this.knockbackX =
             directionX * force;
