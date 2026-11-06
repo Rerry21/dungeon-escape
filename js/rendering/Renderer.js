@@ -20,6 +20,15 @@ export default class Renderer {
         const x = Math.floor(player.x);
         const y = Math.floor(player.y);
 
+        if (
+            player.isInvulnerable() &&
+            Math.floor(
+                player.damageCooldown * 12
+            ) % 2 === 0
+        ) {
+            ctx.globalAlpha = 0.45;
+        }
+
         ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
 
         ctx.fillRect(
@@ -66,11 +75,14 @@ export default class Renderer {
         if (player.isAttacking()) {
             this.drawAttack(player);
         }
+
+        ctx.globalAlpha = 1;
     }
 
     drawAttack(player) {
         const ctx = this.ctx;
-        const hitbox = player.getAttackHitbox();
+        const hitbox =
+            player.getAttackHitbox();
 
         ctx.fillStyle = "#f1eee6";
 
@@ -123,7 +135,89 @@ export default class Renderer {
         }
     }
 
-    drawLighting(player, radius = 190) {
+    drawEnemy(enemy) {
+        const ctx = this.ctx;
+
+        const x = Math.floor(enemy.x);
+        const y = Math.floor(enemy.y);
+
+        ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
+
+        ctx.fillRect(
+            x + 2,
+            y + enemy.height - 1,
+            enemy.width - 4,
+            4
+        );
+
+        if(enemy.isHitFlashing()){
+            ctx.fillStyle = "#f1eee6";
+        } else {
+            ctx.fillStyle = "8f3f48";
+        }
+
+        ctx.fillRect(
+            x + 3,
+            y + 3,
+            enemy.width - 6,
+            enemy.height - 6
+        );
+
+        ctx.fillStyle = "#c96a6a";
+
+        ctx.fillRect(
+            x + 6,
+            y + 6,
+            4,
+            4
+        );
+
+        ctx.fillRect(
+            x + enemy.width - 10,
+            y + 6,
+            4,
+            4
+        );
+
+        this.drawEnemyHealth(enemy);
+    }
+
+    drawEnemyHealth(enemy) {
+        const ctx = this.ctx;
+
+        const width = 24;
+        const height = 3;
+
+        const x =
+            enemy.x +
+            enemy.width / 2 -
+            width / 2;
+
+        const y =
+            enemy.y - 7;
+
+        ctx.fillStyle = "#111116";
+
+        ctx.fillRect(
+            x,
+            y,
+            width,
+            height
+        );
+
+        ctx.fillStyle = "#d65a5a";
+
+        ctx.fillRect(
+            x,
+            y,
+            width *
+            (enemy.health /
+            enemy.maxHealth),
+            height
+        );
+    }
+
+    drawLighting(player, radius = 300) {
         const ctx = this.ctx;
 
         const centerX =
@@ -138,7 +232,7 @@ export default class Renderer {
             ctx.createRadialGradient(
                 centerX,
                 centerY,
-                20,
+                55,
                 centerX,
                 centerY,
                 radius
@@ -150,13 +244,23 @@ export default class Renderer {
         );
 
         gradient.addColorStop(
-            0.55,
-            "rgba(0, 0, 0, 0.15)"
+            0.45,
+            "rgba(0, 0, 0, 0.03)"
+        );
+
+        gradient.addColorStop(
+            0.7,
+            "rgba(0, 0, 0, 0.12)"
+        );
+
+        gradient.addColorStop(
+            0.85,
+            "rgba(0, 0, 0, 0.28)"
         );
 
         gradient.addColorStop(
             1,
-            "rgba(0, 0, 0, 0.75)"
+            "rgba(0, 0, 0, 0.55)"
         );
 
         ctx.fillStyle = gradient;
@@ -173,13 +277,13 @@ export default class Renderer {
         const ctx = this.ctx;
 
         ctx.fillStyle =
-            "rgba(16, 16, 20, 0.85)";
+            "rgba(16, 16, 20, 0.9)";
 
         ctx.fillRect(
             20,
             20,
-            180,
-            60
+            220,
+            78
         );
 
         ctx.fillStyle = "#d6a84f";
@@ -202,6 +306,31 @@ export default class Renderer {
             "FLOOR 01",
             32,
             66
+        );
+
+        const barX = 32;
+        const barY = 77;
+        const barWidth = 180;
+        const barHeight = 8;
+
+        ctx.fillStyle = "#111116";
+
+        ctx.fillRect(
+            barX,
+            barY,
+            barWidth,
+            barHeight
+        );
+
+        ctx.fillStyle = "#d65a5a";
+
+        ctx.fillRect(
+            barX,
+            barY,
+            barWidth *
+            (player.health /
+            player.maxHealth),
+            barHeight
         );
     }
 
@@ -316,7 +445,7 @@ export default class Renderer {
     drawGameOver() {
         const ctx = this.ctx;
 
-        ctx.fillStyle = "#101014";
+        ctx.fillStyle = "rgba(16, 16, 20, 0.85)";
 
         ctx.fillRect(
             0,
@@ -327,7 +456,7 @@ export default class Renderer {
 
         ctx.textAlign = "center";
 
-        ctx.fillStyle = "#f1eee6";
+        ctx.fillStyle = "#d65a5a";
 
         ctx.font =
             "bold 40px monospace";
@@ -337,6 +466,8 @@ export default class Renderer {
             ctx.canvas.width / 2,
             230
         );
+
+        ctx.fillStyle = "#f1eee6";
 
         ctx.font =
             "18px monospace";

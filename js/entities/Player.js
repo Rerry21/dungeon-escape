@@ -9,6 +9,10 @@ export default class Player extends Entity {
         this.color = "#d6a84f";
         this.direction = "down";
 
+        this.maxHealth = 5;
+        this.health = this.maxHealth;
+        this.damageCooldown = 0;
+
         this.attackDuration = 0.12;
         this.attackCooldown = 0.25;
         this.attackTimer = 0;
@@ -18,7 +22,7 @@ export default class Player extends Entity {
     }
 
     update(deltaTime, input, tileMap) {
-        this.updateAttackTimers(deltaTime);
+        this.updateTimers(deltaTime);
 
         let horizontal = 0;
         let vertical = 0;
@@ -67,7 +71,7 @@ export default class Player extends Entity {
         this.moveVertical(deltaTime, tileMap);
     }
 
-    updateAttackTimers(deltaTime) {
+    updateTimers(deltaTime) {
         if (this.attackTimer > 0) {
             this.attackTimer -= deltaTime;
         }
@@ -75,13 +79,40 @@ export default class Player extends Entity {
         if (this.cooldownTimer > 0) {
             this.cooldownTimer -= deltaTime;
         }
+
+        if (this.damageCooldown > 0) {
+            this.damageCooldown -= deltaTime;
+        }
     }
 
     attack() {
         this.attackTimer = this.attackDuration;
+
         this.cooldownTimer =
             this.attackDuration +
             this.attackCooldown;
+    }
+
+    takeDamage(amount) {
+        if (this.damageCooldown > 0) {
+            return;
+        }
+
+        this.health -= amount;
+        this.health = Math.max(
+            0,
+            this.health
+        );
+
+        this.damageCooldown = 0.7;
+    }
+
+    isDead() {
+        return this.health <= 0;
+    }
+
+    isInvulnerable() {
+        return this.damageCooldown > 0;
     }
 
     isAttacking() {
@@ -143,7 +174,8 @@ export default class Player extends Entity {
                 );
 
                 this.x =
-                    column * GAME_CONFIG.TILE_SIZE -
+                    column *
+                    GAME_CONFIG.TILE_SIZE -
                     this.width;
             } else if (this.velocityX < 0) {
                 const column = Math.floor(
@@ -178,7 +210,8 @@ export default class Player extends Entity {
                 );
 
                 this.y =
-                    row * GAME_CONFIG.TILE_SIZE -
+                    row *
+                    GAME_CONFIG.TILE_SIZE -
                     this.height;
             } else if (this.velocityY < 0) {
                 const row = Math.floor(
@@ -208,6 +241,8 @@ export default class Player extends Entity {
         this.velocityX = 0;
         this.velocityY = 0;
         this.direction = "down";
+        this.health = this.maxHealth;
+        this.damageCooldown = 0;
         this.attackTimer = 0;
         this.cooldownTimer = 0;
     }
