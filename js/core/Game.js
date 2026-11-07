@@ -100,64 +100,64 @@ export default class Game {
     }
 
     spawnEnemies() {
-    this.enemies = [];
+        this.enemies = [];
 
-    const rooms = this.tileMap.rooms;
+        const rooms = this.tileMap.rooms;
 
-    const enemyCount = Math.min(
-        4 + this.floor,
-        rooms.length - 2
-    );
-
-    for (
-        let i = 1;
-        i <= enemyCount;
-        i++
-    ) {
-        const room =
-            rooms[i];
-
-        if (!room) {
-            break;
-        }
-
-        const x =
-            room.centerX *
-            GAME_CONFIG.TILE_SIZE +
-            GAME_CONFIG.TILE_SIZE / 2 -
-            11;
-
-        const y =
-            room.centerY *
-            GAME_CONFIG.TILE_SIZE +
-            GAME_CONFIG.TILE_SIZE / 2 -
-            11;
-
-        let type = "chaser";
-
-        if (
-            this.floor >= 2 &&
-            i % 3 === 0
-        ) {
-            type = "fast";
-        }
-
-        if (
-            this.floor >= 3 &&
-            i % 5 === 0
-        ) {
-            type = "tank";
-        }
-
-        this.enemies.push(
-            new Enemy(
-                x,
-                y,
-                type
-            )
+        const enemyCount = Math.min(
+            4 + this.floor,
+            rooms.length - 2
         );
+
+        for (
+            let i = 1;
+            i <= enemyCount;
+            i++
+        ) {
+            const room =
+                rooms[i];
+
+            if (!room) {
+                break;
+            }
+
+            const x =
+                room.centerX *
+                GAME_CONFIG.TILE_SIZE +
+                GAME_CONFIG.TILE_SIZE / 2 -
+                11;
+
+            const y =
+                room.centerY *
+                GAME_CONFIG.TILE_SIZE +
+                GAME_CONFIG.TILE_SIZE / 2 -
+                11;
+
+            let type = "chaser";
+
+            if (
+                this.floor >= 2 &&
+                i % 3 === 0
+            ) {
+                type = "fast";
+            }
+
+            if (
+                this.floor >= 3 &&
+                i % 5 === 0
+            ) {
+                type = "tank";
+            }
+
+            this.enemies.push(
+                new Enemy(
+                    x,
+                    y,
+                    type
+                )
+            );
+        }
     }
-}
 
     update(deltaTime) {
         const state =
@@ -184,7 +184,8 @@ export default class Game {
                 enemy.update(
                     deltaTime,
                     this.player,
-                    this.tileMap
+                    this.tileMap,
+                    this.enemies
                 );
             }
 

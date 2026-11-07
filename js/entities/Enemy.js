@@ -10,17 +10,23 @@ export default class Enemy extends Entity {
         this.speed = 70;
         this.maxHealth = 3;
         this.damage = 1;
+        this.preferredDistance = 30;
+        this.separationStrength = 45;
 
         if (type === "fast") {
             this.speed = 110;
             this.maxHealth = 2;
             this.damage = 1;
+            this.preferredDistance = 36;
+            this.separationStrength = 65;
         }
 
         if (type === "tank") {
             this.speed = 45;
             this.maxHealth = 6;
             this.damage = 2;
+            this.preferredDistance = 42;
+            this.separationStrength = 30;
             this.width = 28;
             this.height = 28;
         }
@@ -39,7 +45,7 @@ export default class Enemy extends Entity {
         this.dead = false;
     }
 
-    update(deltaTime, player, tileMap) {
+    update(deltaTime, player, tileMap, enemies = []) {
         if (this.dead) {
             this.deathTimer -= deltaTime;
             return;
@@ -65,7 +71,6 @@ export default class Enemy extends Entity {
                 deltaTime;
 
             this.resolveCollision(tileMap);
-
             return;
         }
 
@@ -98,31 +103,149 @@ export default class Enemy extends Entity {
             vertical * vertical
         );
 
-        if (distance > 28) {
-            horizontal /= distance;
-            vertical /= distance;
+        let directionX = 0;
+        let directionY = 0;
 
-            this.velocityX =
-                horizontal *
-                this.speed;
+        if (distance > this.preferredDistance) {
+            directionX =
+                horizontal /
+                distance;
 
-            this.velocityY =
-                vertical *
-                this.speed;
+            directionY =
+                vertical /
+                distance;
+        }
 
-            this.moveHorizontal(
-                deltaTime,
-                tileMap
+        const separation =
+            this.getSeparation(
+                enemies
             );
 
-            this.moveVertical(
-                deltaTime,
-                tileMap
+        directionX += separation.x;
+        directionY += separation.y;
+
+        const directionLength =
+            Math.sqrt(
+                directionX * directionX +
+                directionY * directionY
             );
-        } else {
+
+        if (directionLength > 0) {
+            directionX /=
+                directionLength;
+
+            directionY /=
+                directionLength;
+        }
+
+        if (
+            distance <=
+            this.preferredDistance &&
+            Math.abs(separation.x) < 0.01 &&
+            Math.abs(separation.y) < 0.01
+        ) {
             this.velocityX = 0;
             this.velocityY = 0;
+            return;
         }
+
+        this.velocityX =
+            directionX *
+            this.speed;
+
+        this.velocityY =
+            directionY *
+            this.speed;
+
+        this.moveHorizontal(
+            deltaTime,
+            tileMap
+        );
+
+        this.moveVertical(
+            deltaTime,
+            tileMap
+        );
+    }
+
+    getSeparation(enemies) {
+        let forceX = 0;
+        let forceY = 0;
+
+        for (const other of enemies) {
+            if (
+                other === this ||
+                other.dead
+            ) {
+                continue;
+            }
+
+            const thisCenterX =
+                this.x +
+                this.width / 2;
+
+            const thisCenterY =
+                this.y +
+                this.height / 2;
+
+            const otherCenterX =
+                other.x +
+                other.width / 2;
+
+            const otherCenterY =
+                other.y +
+                other.height / 2;
+
+            let distanceX =
+                thisCenterX -
+                otherCenterX;
+
+            let distanceY =
+                thisCenterY -
+                otherCenterY;
+
+            const distance = Math.sqrt(
+                distanceX * distanceX +
+                distanceY * distanceY
+            );
+
+            const minimumDistance =
+                (this.width +
+                other.width) / 2 +
+                8;
+
+            if (
+                distance === 0 ||
+                distance >= minimumDistance
+            ) {
+                continue;
+            }
+
+            distanceX /= distance;
+            distanceY /= distance;
+
+            const strength =
+                1 -
+                distance /
+                minimumDistance;
+
+            forceX +=
+                distanceX *
+                strength *
+                this.separationStrength /
+                100;
+
+            forceY +=
+                distanceY *
+                strength *
+                this.separationStrength /
+                100;
+        }
+
+        return {
+            x: forceX,
+            y: forceY
+        };
     }
 
     moveHorizontal(deltaTime, tileMap) {
